@@ -82,7 +82,7 @@ import './count.css';
 import { useEffect, useState } from 'react';
 import { message, Modal, Popover } from "antd";
 import { InfoCircleOutlined } from '@ant-design/icons';
-// import { ConfettiSideCannons } from './confetti-side-cannons';
+import { ConfettiSideCannons } from './confetti-side-cannons';
 
 const Count = () => {
 
@@ -103,7 +103,7 @@ const Count = () => {
     useEffect(() => {
         if (count === target && target > 0) {
             setEndTime(Date.now());
-            // ConfettiSideCannons()
+            ConfettiSideCannons()
         }
     }, [count, target]);
 
