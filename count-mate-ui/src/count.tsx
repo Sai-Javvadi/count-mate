@@ -1,101 +1,25 @@
-// import './count.css'
-// import { useState } from 'react'
-// import { message, Input, } from "antd";
-
-// const Count = () => {
-
-//     //screens
-//     const [landingPage, setLandingPage] = useState<boolean>(true)
-//     const [targetScreen, setTargetScreen] = useState<boolean>(false)
-//     const [countScreen, setCountScreen] = useState<boolean>(false)
-
-//     const [target, setTarget] = useState<any>(0);
-//     const [count, setCount] = useState<number>(0);
-
-//     const [messageApi, contextHolder] = message.useMessage();
-
-//     const defaultTargets = [10, 25, 50]
-
-//     return (
-//         <div className='count-main-card'>
-
-//             {landingPage && (
-//                 <div>
-//                     <h2 className='count-title' > Count Mate </h2>
-//                     <p className='count-subtitle' > A simple counting app to keep track of your counts. </p>
-
-//                     <button onClick={() => [setTargetScreen(true), setLandingPage(false)]} >
-//                         Let's Go..!
-//                     </button>
-//                 </div>
-//             )}
-
-//             {targetScreen && (
-//                 <div className='target-selection-div' >
-//                     <p className='target-text' > What is the target count ?</p>
-//                     <div className='target-btn-input-div' >
-//                         <div className='target-buttons-div' >
-//                             {defaultTargets.map((t) => (
-//                                 <button key={t} className='target-buttons' onClick={() => setTarget(t)} onTouchStart={() => setTarget(t)} > {t} </button>
-//                             ))}
-//                         </div>
-//                         <Input type='number' className='target-input' value={target} onChange={(e) => setTarget(e.target.value === '' ? '' : Number(e.target.value))} placeholder='Custom' />
-//                     </div>
-//                     {contextHolder}
-//                     <button className='target-screen-start-button'
-//                         onClick={() => {
-//                             if (target >= 1) setCountScreen(true), setTargetScreen(false);
-//                             else messageApi.open({
-//                                 type: "error",
-//                                 content: 'Please enter a target count greater than 0',
-//                                 style: { marginTop: "2vh" },
-//                                 duration: 1.5
-//                             });
-//                         }}>
-//                         START
-//                     </button>
-
-//                 </div>
-//             )}
-
-//             {countScreen && (
-//                 <div className='countScreen-div'>
-//                     <div> Target: {target} </div>
-//                     <div className='count-add-minus-div' >
-//                         <button className='count-add-minus-buttons' onClick={() => setCount((count) => count - 1)}  > - </button>
-//                         <div > {count <= 0 ? 0 : count} </div>
-//                         <button className='count-add-minus-buttons' onClick={() => setCount((count) => count + 1)}  > + </button>
-//                     </div>
-//                     <button onClick={() => [setCount(0), setTarget(0), setCountScreen(false), setTargetScreen(false), setLandingPage(true)]} > Reset </button>
-//                 </div>
-//             )}
-//         </div>
-//     )
-// }
-
-// export default Count
-
-
-
-
 import './count.css';
 import { useEffect, useState } from 'react';
-import { message, Modal, Popover } from "antd";
+import { message, Modal, Popconfirm, Popover } from "antd";
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { ConfettiSideCannons } from './confetti-side-cannons';
 
 const Count = () => {
 
-    const [landingPage, setLandingPage] = useState(true);
-    const [targetScreen, setTargetScreen] = useState(false);
-    const [countScreen, setCountScreen] = useState(false);
+    const [landingPage, setLandingPage] = useState<boolean>(true);
+    const [countScreen, setCountScreen] = useState<boolean>(false);
+    const [targetScreen, setTargetScreen] = useState<boolean>(false);
 
-    const [count, setCount] = useState(0);
     const [target, setTarget] = useState<any>(0);
-    const [startTime, setStartTime] = useState<number>(0);
+    const [count, setCount] = useState<number>(0);
     const [endTime, setEndTime] = useState<number>(0);
+    const [startTime, setStartTime] = useState<number>(0);
 
-    const [showModal, setShowModal] = useState(false);
+    const [showModal, setShowModal] = useState<boolean>(false);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [showHalfModal, setShowHalfModal] = useState<boolean>(false);
+    const [showNinetyPercentModal, setShowNinetyPercentModal] = useState<boolean>(false);
+
     const [messageApi, contextHolder] = message.useMessage();
 
     const defaultTargets = [10, 25, 50];
@@ -118,6 +42,41 @@ const Count = () => {
             setShowModal(false);
         }
     }, [count, target]);
+
+
+    useEffect(() => {
+        if (isHalfway(target)) {
+            setShowHalfModal(true);
+
+            const timer = setTimeout(() => {
+                setShowHalfModal(false);
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [count, target]);
+
+    useEffect(() => {
+        if (getNinetyPercent(target)) {
+            setShowNinetyPercentModal(true);
+
+            const timer = setTimeout(() => {
+                setShowNinetyPercentModal(false);
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [count, target]);
+
+    const isHalfway = (target: number) => {
+        if (!target) return false;
+        return count === Math.floor(target / 2);
+    };
+
+    const getNinetyPercent = (target: number) => {
+        if (!target) return false;
+        return count === Math.ceil(target * 0.9);
+    }
 
     const calculateDuration = () => {
         if (!startTime || !endTime) return "";
@@ -142,7 +101,15 @@ const Count = () => {
         }
     };
 
-    const handleResetMission = () => {
+    const handleResetClick = () => {
+        if (target > 0 && count >= target * 0.5) {
+            setShowResetConfirm(true);
+        } else {
+            resetMission();
+        }
+    };
+
+    const resetMission = () => {
         setCount(0);
         setTarget("");
         setLandingPage(true);
@@ -156,15 +123,20 @@ const Count = () => {
         setLandingPage(true);
         setCountScreen(false);
         setTargetScreen(false);
-    }
+    };
 
-    const content = (
+    const calculatePercentage = (count: number, target: number) => {
+        if (target === 0) return 0;
+        return (count / target) * 100;
+    };
+
+
+    const startEndTimeDetails = (
         <>
             <p style={{ color: "white" }} > Start Time : <b>{new Date(startTime).toLocaleString()}</b> </p>
             <p style={{ color: "white" }} > End Time : <b>{new Date(endTime).toLocaleString()}</b> </p>
         </>
     );
-
 
     return (
         <div className="project-main-div-container">
@@ -222,27 +194,72 @@ const Count = () => {
                     </h2>
 
                     <div className="count-controls">
-                        <button className="circle-btn" onClick={() => setCount((c) => Math.max(0, c - 1))}> − </button>
+                        <button className="circle-btn" onClick={() => setCount((c) => Math.max(0, c - 1))} disabled={count === target} > - </button>
                         <div className="count-display">{count}</div>
-                        <button className="circle-btn" onClick={() => setCount((c) => c + 1)} > +</button>
+                        <button className="circle-btn" onClick={() => setCount((c) => c + 1)} disabled={count === target} > + </button>
                     </div>
 
                     <div style={{ display: "flex", justifyContent: "center", alignItems: "end" }}  >
-                        <button className="reset-btn" onClick={handleResetMission}>
-                            Reset Mission
-                        </button>
+                        <Popconfirm
+                            title="Reset Mission?"
+                            description={`You've already completed ${calculatePercentage(count, target)}% of your target. Do you really want to reset?`}
+                            okText="Yes, Reset"
+                            cancelText="Cancel"
+                            open={showResetConfirm}
+                            onConfirm={resetMission}
+                            onCancel={() => setShowResetConfirm(false)}
+                            style={{ color: "white" }}
+                            classNames={{ root: "reset-confirm-popover" }}
+                            icon={
+                                <svg
+                                    width="18" height="18"
+                                    viewBox="0 0 24 24" style={{ marginRight: 8 }}
+                                >
+                                    <circle cx="12" cy="12" r="10" fill="#ff4141"></circle>
+                                    <path
+                                        d="M12 6 L12 12"
+                                        stroke="white"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                    />
+                                    <circle cx="12" cy="16" r="1.5" fill="white" />
+                                </svg>
+                            }>
+                            <button className="reset-btn" onClick={handleResetClick}>
+                                Reset Mission
+                            </button>
+                        </Popconfirm>
                     </div>
 
                     <Modal
+                        className="congrats-modal"
+                        open={showHalfModal} centered
+                        width={450} footer={null} closable={false}
+                    >
+                        <div className="congrats-modal-content">
+                            <p>🎉 Great job! You're halfway there!</p>
+                        </div>
+                    </Modal>
+
+                    <Modal
+                        className="congrats-modal"
+                        open={showNinetyPercentModal} centered
+                        width={450} footer={null} closable={false}
+                    >
+                        <div className="congrats-modal-content">
+                            <p>🎉 Great job! You're 90% there!</p>
+                        </div>
+                    </Modal>
+
+                    <Modal
+                        open={showModal} centered
                         className='congrats-modal'
-                        centered width={450}
-                        footer={null} closable={false}
-                        open={showModal}
+                        width={450} footer={null} closable={false}
                     >
                         <div className="congrats-modal-content" >
                             <div style={{ display: "flex", justifyContent: "space-between" }} >
                                 <h2>Congratulations!</h2>
-                                <Popover content={content} trigger={["hover", "click"]} >
+                                <Popover content={startEndTimeDetails} trigger={["hover", "click"]} >
                                     <InfoCircleOutlined />
                                 </Popover>
                             </div>
@@ -260,8 +277,7 @@ const Count = () => {
                         </div>
                     </Modal>
                 </div>
-            )
-            }
+            )}
         </div >
     );
 };
