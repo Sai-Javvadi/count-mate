@@ -54,7 +54,7 @@ const Count = () => {
 
             return () => clearTimeout(timer);
         }
-    }, [count, target]);
+    }, [count]);
 
     useEffect(() => {
         if (getNinetyPercent(target)) {
